@@ -115,5 +115,14 @@ Others
 
 .. autoattribute:: Stream.language
 
+.. autoattribute:: Stream.disposition
+
+.. autoclass:: Dispositions
+
+    Wraps :ffmpeg:`AVStream.disposition` (``AV_DISPOSITION_*``).
+
+    .. enumtable:: av.stream.Dispositions
+        :class: av.stream.Stream
+
 
 
