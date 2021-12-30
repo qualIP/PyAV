@@ -135,9 +135,13 @@ cdef class InputContainer(Container):
         # (and others).
         id(kwargs)
 
+        # If AVFMTCTX_NOHEADER is set in ctx_flags, then new streams may also appear in av_read_frame().
+        # Save the initial number of streams to avoid overflows.
+        cdef unsigned int nb_streams = self.ptr.nb_streams
+
         streams = self.streams.get(*args, **kwargs)
 
-        cdef bint *include_stream = <bint*>malloc(self.ptr.nb_streams * sizeof(bint))
+        cdef bint *include_stream = <bint*>malloc(nb_streams * sizeof(bint))
         if include_stream == NULL:
             raise MemoryError()
 
@@ -148,11 +152,11 @@ cdef class InputContainer(Container):
         self.set_timeout(self.read_timeout)
         try:
 
-            for i in range(self.ptr.nb_streams):
+            for i in range(nb_streams):
                 include_stream[i] = False
             for stream in streams:
                 i = stream.index
-                if i >= self.ptr.nb_streams:
+                if i >= nb_streams:
                     raise ValueError('stream index %d out of range' % i)
                 include_stream[i] = True
 
@@ -167,7 +171,7 @@ cdef class InputContainer(Container):
                 except EOFError:
                     break
 
-                if include_stream[packet.ptr.stream_index]:
+                if packet.str.stream_index < nb_streams and include_stream[packet.str.stream_index]:
                     # If AVFMTCTX_NOHEADER is set in ctx_flags, then new streams
                     # may also appear in av_read_frame().
                     # http://ffmpeg.org/doxygen/trunk/structAVFormatContext.html
@@ -179,7 +183,7 @@ cdef class InputContainer(Container):
                         yield packet
 
             # Flush!
-            for i in range(self.ptr.nb_streams):
+            for i in range(nb_streams):
                 if include_stream[i]:
                     packet = Packet()
                     packet._stream = self.streams[i]
