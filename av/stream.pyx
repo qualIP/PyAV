@@ -1,6 +1,7 @@
 import warnings
 
 from cpython cimport PyWeakref_NewRef
+from cpython.object cimport PyObject_GenericSetAttr
 from libc.stdint cimport int64_t, uint8_t
 from libc.string cimport memcpy
 cimport libav as lib
@@ -145,17 +146,33 @@ cdef class Stream(object):
         if self.codec_context is not None:
             return getattr(self.codec_context, name)
 
+        raise AttributeError(name)
+
     def __setattr__(self, name, value):
-        if name == "id":
-            self._set_id(value)
+        # Properties of Stream, or classes derived from Stream, can be set
+        # directly. Filter the "local" attributes here:
+        if name.startswith('_') \
+                or name in (
+                    'id',
+                    'disposition',
+                    'time_base',
+                ) \
+                or name.startswith('disposition_'):
+            # Both of the below Python calls fail:
+            #   TypeError: can't apply this __setattr__ to av.video.stream.VideoStream object
+            # super(Stream, self).__setattr__(name, value)
+            # object.__setattr__(self, name, value)
+            PyObject_GenericSetAttr(self, name, value)
             return
 
         # Convenience setter for codec context properties.
         if self.codec_context is not None:
+            # All other attributes are set on the codec_context. This matches with
+            # the __getattr__ implementation which gets unknown attributes from
+            # codec_context too.
             setattr(self.codec_context, name, value)
 
-        if name == "time_base":
-            self._set_time_base(value)
+        raise AttributeError(name)
 
     cdef _finalize_for_output(self):
 
@@ -215,14 +232,11 @@ cdef class Stream(object):
         def __get__(self):
             return self.ptr.id
 
-    cdef _set_id(self, value):
-        """
-        Setter used by __setattr__ for the id property.
-        """
-        if value is None:
-            self.ptr.id = 0
-        else:
-            self.ptr.id = value
+        def __set__(self, value):
+            if value is None:
+                self.ptr.id = 0
+            else:
+                self.ptr.id = value
 
     property profile:
         """
@@ -254,11 +268,8 @@ cdef class Stream(object):
         def __get__(self):
             return avrational_to_fraction(&self.ptr.time_base)
 
-    cdef _set_time_base(self, value):
-        """
-        Setter used by __setattr__ for the time_base property.
-        """
-        to_avrational(value, &self.ptr.time_base)
+        def __set__(self, value):
+            to_avrational(value, &self.ptr.time_base)
 
     property average_rate:
         """
