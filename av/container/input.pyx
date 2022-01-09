@@ -1,5 +1,5 @@
 from libc.stdint cimport int64_t
-from libc.stdlib cimport free, malloc
+from libc.stdlib cimport free, malloc, calloc
 
 from av.codec.context cimport CodecContext, wrap_codec_context
 from av.container.streams cimport StreamContainer
@@ -69,7 +69,13 @@ cdef class InputContainer(Container):
             free(c_options)
 
         self.streams = StreamContainer()
-        for i in range(self.ptr.nb_streams):
+        self._update_streams()
+
+        self.metadata = avdict_to_dict(self.ptr.metadata, self.metadata_encoding, self.metadata_errors)
+
+    def _update_streams(self):
+        # Internal function to update the `streams` container with initial or only new streams.
+        for i in range(len(self.streams), self.ptr.nb_streams):
             stream = self.ptr.streams[i]
             codec = lib.avcodec_find_decoder(stream.codecpar.codec_id)
             if codec:
@@ -82,8 +88,6 @@ cdef class InputContainer(Container):
                 # no decoder is available
                 py_codec_context = None
             self.streams.add_stream(wrap_stream(self, stream, py_codec_context))
-
-        self.metadata = avdict_to_dict(self.ptr.metadata, self.metadata_encoding, self.metadata_errors)
 
     def __dealloc__(self):
         close_input(self)
@@ -135,15 +139,14 @@ cdef class InputContainer(Container):
         # (and others).
         id(kwargs)
 
-        # If AVFMTCTX_NOHEADER is set in ctx_flags, then new streams may also appear in av_read_frame().
-        # Save the initial number of streams to avoid overflows.
-        cdef unsigned int nb_streams = self.ptr.nb_streams
-
-        streams = self.streams.get(*args, **kwargs)
-
-        cdef bint *include_stream = <bint*>malloc(nb_streams * sizeof(bint))
-        if include_stream == NULL:
-            raise MemoryError()
+        # If AVFMTCTX_NOHEADER is set in ctx_flags, then new streams may also
+        # appear in av_read_frame().
+        # http://ffmpeg.org/doxygen/trunk/structAVFormatContext.html
+        # To seamlessly support a possibly-increasing number of streams,
+        # allocate include_stream only when needed and track the allocation
+        # size with nb_streams.
+        cdef unsigned int nb_streams = 0
+        cdef bint *include_stream = NULL
 
         cdef unsigned int i
         cdef Packet packet
@@ -151,14 +154,6 @@ cdef class InputContainer(Container):
 
         self.set_timeout(self.read_timeout)
         try:
-
-            for i in range(nb_streams):
-                include_stream[i] = False
-            for stream in streams:
-                i = stream.index
-                if i >= nb_streams:
-                    raise ValueError('stream index %d out of range' % i)
-                include_stream[i] = True
 
             while True:
 
@@ -171,16 +166,32 @@ cdef class InputContainer(Container):
                 except EOFError:
                     break
 
-                if packet.str.stream_index < nb_streams and include_stream[packet.str.stream_index]:
-                    # If AVFMTCTX_NOHEADER is set in ctx_flags, then new streams
-                    # may also appear in av_read_frame().
-                    # http://ffmpeg.org/doxygen/trunk/structAVFormatContext.html
-                    # TODO: find better way to handle this
-                    if packet.ptr.stream_index < len(self.streams):
-                        packet._stream = self.streams[packet.ptr.stream_index]
-                        # Keep track of this so that remuxing is easier.
-                        packet._time_base = packet._stream.ptr.time_base
-                        yield packet
+                if packet.ptr.stream_index >= nb_streams:
+                    # Either this is the first time or new streams were added.
+
+                    # Learn any new streams...
+                    self._update_streams()
+
+                    nb_streams = self.ptr.nb_streams
+                    if packet.ptr.stream_index >= nb_streams:
+                        raise ValueError('stream index %d out of range' % i)
+
+                    # Reset the include_stream array...
+                    free(include_stream)
+                    include_stream = <bint*>calloc(nb_streams, sizeof(bint))
+                    if include_stream == NULL:
+                        raise MemoryError()
+                    for stream in self.streams.get(*args, **kwargs):
+                        i = stream.index
+                        if i >= nb_streams:
+                            raise ValueError('stream index %d out of range' % i)
+                        include_stream[i] = True
+
+                if include_stream[packet.ptr.stream_index]:
+                    packet._stream = self.streams[packet.ptr.stream_index]
+                    # Keep track of this so that remuxing is easier.
+                    packet._time_base = packet._stream.ptr.time_base
+                    yield packet
 
             # Flush!
             for i in range(nb_streams):
