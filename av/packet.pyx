@@ -172,6 +172,12 @@ cdef class Packet(Buffer):
             if self.ptr.pos != -1:
                 return self.ptr.pos
 
+        def __set__(self, value):
+            if value is None:
+                self.ptr.pos = -1
+            else:
+                self.ptr.pos = value
+
     property size:
         """
         The size in bytes of this packet's data.
@@ -192,6 +198,12 @@ cdef class Packet(Buffer):
         def __get__(self):
             if self.ptr.duration != lib.AV_NOPTS_VALUE:
                 return self.ptr.duration
+
+        def __set__(self, value):
+            if value is None:
+                self.ptr.duration = lib.AV_NOPTS_VALUE
+            else:
+                self.ptr.duration = value
 
     property is_keyframe:
         def __get__(self): return bool(self.ptr.flags & lib.AV_PKT_FLAG_KEY)
