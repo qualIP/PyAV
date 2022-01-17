@@ -159,6 +159,12 @@ cdef class VideoCodecContext(CodecContext):
         def __get__(self):
             return self.ptr.coded_width
 
+        def __set__(self, value):
+            self.ptr.coded_width = value
+
     property coded_height:
         def __get__(self):
             return self.ptr.coded_height
+
+        def __set__(self, value):
+            self.ptr.coded_height = value
