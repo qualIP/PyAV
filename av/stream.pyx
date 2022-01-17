@@ -156,6 +156,7 @@ cdef class Stream(object):
                     'id',
                     'disposition',
                     'time_base',
+                    'sample_aspect_ratio',
                 ) \
                 or name.startswith('disposition_'):
             # Both of the below Python calls fail:
@@ -312,6 +313,21 @@ cdef class Stream(object):
             # The two NULL arguments aren't used in FFmpeg >= 4.0
             cdef lib.AVRational val = lib.av_guess_frame_rate(NULL, self.ptr, NULL)
             return avrational_to_fraction(&val)
+
+    property sample_aspect_ratio:
+        """The sample aspect ratio of this stream.
+
+        - encoding: Set by user.
+        - decoding: Set by libavformat.
+
+        :type: :class:`~fractions.Fraction` or ``None``
+
+        """
+        def __get__(self):
+            return avrational_to_fraction(&self.ptr.sample_aspect_ratio)
+
+        def __set__(self, value):
+            to_avrational(value, &self.ptr.sample_aspect_ratio)
 
     property start_time:
         """
