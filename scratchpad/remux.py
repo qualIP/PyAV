@@ -43,7 +43,9 @@ for i, stream in enumerate(input_.streams):
         or (stream.type == "subtitle" and not args.nosubtitle)
         or (stream.type == "data" and not args.nodata)
     ):
-        in_to_out[stream] = output.add_stream(template=stream)
+        in_to_out[stream] = ostream = output.add_stream(template=stream)
+        if ostream.time_base is None:
+            ostream.time_base = stream.time_base
 
 for i, packet in enumerate(input_.demux(list(in_to_out.keys()))):
 
