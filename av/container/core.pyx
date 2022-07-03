@@ -185,6 +185,8 @@ cdef class Container(object):
 
         if isinstance(file_, str):
             self.name = file_
+        elif isinstance(file_, os.PathLike):
+            self.name = os.fspath(file_)
         else:
             self.name = str(getattr(file_, 'name', '<none>'))
 
