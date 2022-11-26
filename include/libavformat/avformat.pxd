@@ -190,6 +190,16 @@ cdef extern from "libavformat/avformat.h" nogil:
 
     cdef AVInputFormat* av_find_input_format(const char *name)
 
+    cdef struct AVChapter:
+        # #if FF_API_CHAPTER_ID_INT  # (LIBAVFORMAT_VERSION_MAJOR < 59)
+        int id                  # unique ID to identify the chapter
+        # #else
+        # int64_t id            # unique ID to identify the chapter
+        # #endif
+        AVRational time_base    # time base in which the start/end timestamps are specified
+        int64_t start, end      # chapter start/end time in time_base units
+        AVDictionary *metadata
+
     # http://ffmpeg.org/doxygen/trunk/structAVFormatContext.html
     cdef struct AVFormatContext:
 
@@ -226,6 +236,9 @@ cdef extern from "libavformat/avformat.h" nogil:
             AVFormatContext *s,
             AVIOContext *pb
         )
+
+        unsigned int nb_chapters
+        AVChapter **chapters
 
     cdef AVFormatContext* avformat_alloc_context()
 
@@ -304,6 +317,15 @@ cdef extern from "libavformat/avformat.h" nogil:
     cdef AVStream* avformat_new_stream(
         AVFormatContext *ctx,
         AVCodec *c
+    )
+
+    AVChapter *avpriv_new_chapter(
+        AVFormatContext *s,
+        int id,
+        AVRational time_base,
+        int64_t start,
+        int64_t end,
+        const char *title,
     )
 
     cdef int avformat_alloc_output_context2(

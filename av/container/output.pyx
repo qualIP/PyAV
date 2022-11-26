@@ -4,10 +4,12 @@ import os
 
 from av.codec.codec cimport Codec
 from av.codec.context cimport CodecContext, wrap_codec_context
+from av.container.chapters cimport ChapterContainer
 from av.container.streams cimport StreamContainer
 from av.dictionary cimport _Dictionary
 from av.error cimport err_check
 from av.packet cimport Packet
+from av.chapter cimport Chapter, wrap_chapter
 from av.stream cimport Stream, wrap_stream
 from av.utils cimport dict_to_avdict, to_avrational
 
@@ -42,6 +44,37 @@ cdef class OutputContainer(Container):
         close_output(self)
         with nogil:
             lib.av_packet_free(&self.packet_ptr)
+
+    property nb_chapters:
+        """
+        Number of chapters in chapters list.
+
+        When muxing, chapters are normally written in the file header,
+        so nb_chapters should normally be initialized before write_header
+        is called. Some muxers (e.g. mov and mkv) can also write chapters
+        in the trailer. To write chapters in the trailer, nb_chapters
+        must be zero when write_header is called and non-zero when
+        write_trailer is called.
+
+        - muxing: set by user
+
+        :type: int
+
+        """
+        def __get__(self):
+            return self.ptr.nb_chapters
+
+    property chapters:
+        def __get__(self):
+            chapters = self._chapters
+            if chapters is None:
+                # First time, create the container
+                chapters = ChapterContainer()
+                for i in range(self.nb_chapters):
+                    chapter = wrap_chapter(self, self.ptr.chapters[i])
+                    chapters.add_chapter(chapter)
+                self._chapters = chapters
+            return chapters
 
     def add_stream(self, codec_name=None, object rate=None, Stream template=None, options=None, **kwargs):
         """add_stream(codec_name, rate=None)

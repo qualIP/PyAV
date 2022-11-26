@@ -3,9 +3,11 @@ from libc.stdlib cimport free, malloc, calloc
 
 from av.codec.context cimport CodecContext, wrap_codec_context
 from av.container.streams cimport StreamContainer
+from av.container.chapters cimport ChapterContainer
 from av.dictionary cimport _Dictionary
 from av.error cimport err_check
 from av.packet cimport Packet
+from av.chapter cimport Chapter, wrap_chapter
 from av.stream cimport Stream, wrap_stream
 from av.utils cimport avdict_to_dict
 
@@ -111,6 +113,30 @@ cdef class InputContainer(Container):
     property max_analyze_duration:
         def __get__(self): return self.ptr.max_analyze_duration
         def __set__(self, value): self.ptr.max_analyze_duration = value
+
+    property nb_chapters:
+        """
+        Number of chapters in chapters list.
+
+        - demuxing: set by libavformat
+
+        :type: int
+
+        """
+        def __get__(self):
+            return self.ptr.nb_chapters
+
+    property chapters:
+        def __get__(self):
+            chapters = self._chapters
+            if chapters is None:
+                # First time, create the container
+                chapters = ChapterContainer()
+                for i in range(self.nb_chapters):
+                    chapter = wrap_chapter(self, self.ptr.chapters[i])
+                    chapters.add_chapter(chapter)
+                self._chapters = chapters
+            return chapters
 
     def close(self):
         close_input(self)
