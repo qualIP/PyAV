@@ -101,8 +101,6 @@ Capabilities = define_enum('Capabilities', 'av.codec', (
         """Codec supports slice-based (or partition-based) multithreading."""),
     ('PARAM_CHANGE', lib.AV_CODEC_CAP_PARAM_CHANGE,
         """Codec supports changed parameters at any point."""),
-    ('AUTO_THREADS', lib.AV_CODEC_CAP_AUTO_THREADS,
-        """Codec supports avctx->thread_count == 0 (auto)."""),
     ('VARIABLE_FRAME_SIZE', lib.AV_CODEC_CAP_VARIABLE_FRAME_SIZE,
         """Audio encoder supports receiving a different number of samples in each call."""),
     ('AVOID_PROBING', lib.AV_CODEC_CAP_AVOID_PROBING,
@@ -318,7 +316,6 @@ cdef class Codec(object):
     frame_threads = capabilities.flag_property('FRAME_THREADS')
     slice_threads = capabilities.flag_property('SLICE_THREADS')
     param_change = capabilities.flag_property('PARAM_CHANGE')
-    auto_threads = capabilities.flag_property('AUTO_THREADS')
     variable_frame_size = capabilities.flag_property('VARIABLE_FRAME_SIZE')
     avoid_probing = capabilities.flag_property('AVOID_PROBING')
     # intra_only = capabilities.flag_property('INTRA_ONLY')  # Dupes.
