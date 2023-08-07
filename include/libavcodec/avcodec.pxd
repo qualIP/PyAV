@@ -85,7 +85,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AV_CODEC_FLAG2_FAST
         AV_CODEC_FLAG2_NO_OUTPUT
         AV_CODEC_FLAG2_LOCAL_HEADER
-        AV_CODEC_FLAG2_DROP_FRAME_TIMECODE
         AV_CODEC_FLAG2_CHUNKS
         AV_CODEC_FLAG2_IGNORE_CROP
         AV_CODEC_FLAG2_SHOW_ALL
