@@ -111,8 +111,6 @@ Capabilities = define_enum('Capabilities', 'av.codec', (
         the stream.
         A decoder marked with this flag should only be used as last resort
         choice for probing."""),
-    ('LOSSLESS', lib.AV_CODEC_CAP_LOSSLESS,
-        """Codec is lossless."""),
     ('HARDWARE', lib.AV_CODEC_CAP_HARDWARE,
         """Codec is backed by a hardware implementation. Typically used to
         identify a non-hwaccel hardware decoder. For information about hwaccels, use
@@ -316,7 +314,6 @@ cdef class Codec(object):
     param_change = capabilities.flag_property('PARAM_CHANGE')
     variable_frame_size = capabilities.flag_property('VARIABLE_FRAME_SIZE')
     avoid_probing = capabilities.flag_property('AVOID_PROBING')
-    # lossless = capabilities.flag_property('LOSSLESS')  # Dupes.
     hardware = capabilities.flag_property('HARDWARE')
     hybrid = capabilities.flag_property('HYBRID')
     encoder_reordered_opaque = capabilities.flag_property('ENCODER_REORDERED_OPAQUE')
