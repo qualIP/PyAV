@@ -221,7 +221,10 @@ cdef class Codec(object):
         E.g: ``'audio'``, ``'video'``, ``'subtitle'``.
 
         """
-        return lib.av_get_media_type_string(self.ptr.type)
+        cdef char * s = lib.av_get_media_type_string(self.ptr.type)
+        if s == NULL:
+            s = ""
+        return s
 
     property id:
         def __get__(self): return self.ptr.id

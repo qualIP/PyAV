@@ -36,7 +36,10 @@ cdef class FilterPad(object):
 
         :type: str
         """
-        return lib.av_get_media_type_string(lib.avfilter_pad_get_type(self.base_ptr, self.index))
+        cdef char * s = lib.av_get_media_type_string(lib.avfilter_pad_get_type(self.base_ptr, self.index))
+        if s == NULL:
+            s = ""
+        return s
 
 
 cdef class FilterContextPad(FilterPad):

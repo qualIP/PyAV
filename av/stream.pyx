@@ -403,4 +403,7 @@ cdef class Stream(object):
 
         :type: str
         """
-        return lib.av_get_media_type_string(self.ptr.codecpar.codec_type)
+        cdef char * s = lib.av_get_media_type_string(self.ptr.codecpar.codec_type)
+        if s == NULL:
+            s = ""
+        return s
