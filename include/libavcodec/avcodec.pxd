@@ -223,7 +223,7 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         int channel_layout
 
         # Subtitles.
-        int sub_text_format
+        # TODO
 
         #: .. todo:: ``get_buffer`` is deprecated for get_buffer2 in newer versions of FFmpeg.
         int get_buffer(AVCodecContext *ctx, AVFrame *frame)
