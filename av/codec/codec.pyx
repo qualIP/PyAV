@@ -111,8 +111,6 @@ Capabilities = define_enum('Capabilities', 'av.codec', (
         the stream.
         A decoder marked with this flag should only be used as last resort
         choice for probing."""),
-    ('INTRA_ONLY', lib.AV_CODEC_CAP_INTRA_ONLY,
-        """Codec is intra only."""),
     ('LOSSLESS', lib.AV_CODEC_CAP_LOSSLESS,
         """Codec is lossless."""),
     ('HARDWARE', lib.AV_CODEC_CAP_HARDWARE,
@@ -318,7 +316,6 @@ cdef class Codec(object):
     param_change = capabilities.flag_property('PARAM_CHANGE')
     variable_frame_size = capabilities.flag_property('VARIABLE_FRAME_SIZE')
     avoid_probing = capabilities.flag_property('AVOID_PROBING')
-    # intra_only = capabilities.flag_property('INTRA_ONLY')  # Dupes.
     # lossless = capabilities.flag_property('LOSSLESS')  # Dupes.
     hardware = capabilities.flag_property('HARDWARE')
     hybrid = capabilities.flag_property('HYBRID')

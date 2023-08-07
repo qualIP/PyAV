@@ -53,7 +53,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AV_CODEC_CAP_PARAM_CHANGE
         AV_CODEC_CAP_VARIABLE_FRAME_SIZE
         AV_CODEC_CAP_AVOID_PROBING
-        AV_CODEC_CAP_INTRA_ONLY
         AV_CODEC_CAP_LOSSLESS
         AV_CODEC_CAP_HARDWARE
         AV_CODEC_CAP_HYBRID
