@@ -96,9 +96,6 @@ Flags = define_enum('Flags', __name__, (
         """Only decode/encode grayscale."""),
     ('PSNR', lib.AV_CODEC_FLAG_PSNR,
         """error[?] variables will be set during encoding."""),
-    ('TRUNCATED', lib.AV_CODEC_FLAG_TRUNCATED,
-        """Input bitstream might be truncated at a random location
-        instead of only at frame boundaries."""),
     ('INTERLACED_DCT', lib.AV_CODEC_FLAG_INTERLACED_DCT,
         """Use interlaced DCT."""),
     ('LOW_DELAY', lib.AV_CODEC_FLAG_LOW_DELAY,
@@ -195,7 +192,6 @@ cdef class CodecContext(object):
     loop_filter = flags.flag_property('LOOP_FILTER')
     gray = flags.flag_property('GRAY')
     psnr = flags.flag_property('PSNR')
-    truncated = flags.flag_property('TRUNCATED')
     interlaced_dct = flags.flag_property('INTERLACED_DCT')
     low_delay = flags.flag_property('LOW_DELAY')
     global_header = flags.flag_property('GLOBAL_HEADER')

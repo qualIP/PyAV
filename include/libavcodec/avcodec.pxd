@@ -76,7 +76,6 @@ cdef extern from "libavcodec/avcodec.h" nogil:
         AV_CODEC_FLAG_LOOP_FILTER
         AV_CODEC_FLAG_GRAY
         AV_CODEC_FLAG_PSNR
-        AV_CODEC_FLAG_TRUNCATED
         AV_CODEC_FLAG_INTERLACED_DCT
         AV_CODEC_FLAG_LOW_DELAY
         AV_CODEC_FLAG_GLOBAL_HEADER

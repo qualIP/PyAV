@@ -52,7 +52,6 @@ Capabilities = define_enum('Capabilities', 'av.codec', (
         """Codec uses get_buffer() for allocating buffers and supports custom allocators.
         If not set, it might not use get_buffer() at all or use operations that
         assume the buffer was allocated by avcodec_default_get_buffer."""),
-    ('TRUNCATED', lib.AV_CODEC_CAP_TRUNCATED),
     ('HWACCEL', 1 << 4),
     ('DELAY', lib.AV_CODEC_CAP_DELAY,
         """Encoder or decoder requires flushing with NULL input at the end in order to
@@ -308,7 +307,6 @@ cdef class Codec(object):
 
     draw_horiz_band = capabilities.flag_property('DRAW_HORIZ_BAND')
     dr1 = capabilities.flag_property('DR1')
-    truncated = capabilities.flag_property('TRUNCATED')
     hwaccel = capabilities.flag_property('HWACCEL')
     delay = capabilities.flag_property('DELAY')
     small_last_frame = capabilities.flag_property('SMALL_LAST_FRAME')
